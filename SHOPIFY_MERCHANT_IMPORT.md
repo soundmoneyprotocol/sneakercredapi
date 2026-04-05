@@ -390,7 +390,7 @@ So merchants see:
 - [ ] **OAuth callback endpoint** (`/api/shopify/callback`)
 - [ ] **Implement state verification** for CSRF
 - [ ] **Encrypt access tokens** in database
-- [ ] **Test with dev store** (solarahsessentials.myshopify.com)
+- [ ] **Test with dev store** (soundmoneyshop.myshopify.com)
 - [ ] **Add webhook validation**
 - [ ] **Implement rate limiting**
 - [ ] **Add error handling**
@@ -426,7 +426,7 @@ So merchants see:
 ## Next Steps
 
 1. **Implement OAuth callback** - Handle code exchange
-2. **Test with dev store** - Use solarahsessentials.myshopify.com
+2. **Test with dev store** - Use soundmoneyshop.myshopify.com
 3. **Add webhook handling** - Real-time inventory sync
 4. **Production secrets** - Get API secret from Shopify
 5. **Deploy and monitor** - Track sync success rate
