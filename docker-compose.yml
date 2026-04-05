@@ -1,0 +1,85 @@
+version: '3.9'
+
+services:
+  # Express API Server
+  api:
+    build: .
+    container_name: sneakercred-api
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      API_URL: http://localhost:3000
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/sneakercred
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-key-min-32-characters-long-please}
+      LOG_LEVEL: info
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./src:/app/src
+      - ./package.json:/app/package.json
+    command: npm run dev
+    networks:
+      - sneakercred
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: sneakercred-postgres
+    environment:
+      POSTGRES_DB: sneakercred
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - sneakercred
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: sneakercred-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - sneakercred
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PgAdmin for database management (optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: sneakercred-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@sneakercred.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - sneakercred
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  sneakercred:
+    driver: bridge
