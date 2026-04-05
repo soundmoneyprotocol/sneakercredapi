@@ -11,14 +11,6 @@ import logger from '../config/logger';
 
 const router = Router();
 
-interface ShopifyStoreRequest extends Request {
-  user?: { id: string };
-}
-
-/**
- * POST /api/shopify/connect
- * Connect a Shopify store to a creator account
- */
 /**
  * POST /api/shopify/callback
  * Handle Shopify OAuth callback - exchange code for access token
@@ -62,7 +54,8 @@ router.post('/callback', async (req: Request, res: Response) => {
       });
     }
 
-    const { access_token } = await tokenResponse.json();
+    const tokenData = await tokenResponse.json() as any;
+    const access_token = tokenData.access_token;
 
     if (!access_token) {
       return res.status(401).json({
@@ -92,7 +85,7 @@ router.post('/callback', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/connect', authMiddleware, async (req: ShopifyStoreRequest, res: Response) => {
+router.post('/connect', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { shopName, accessToken } = req.body;
     const userId = req.user?.id;
@@ -141,7 +134,7 @@ router.post('/connect', authMiddleware, async (req: ShopifyStoreRequest, res: Re
  * POST /api/shopify/sync-products
  * Sync products from connected Shopify store
  */
-router.post('/sync-products', authMiddleware, async (req: ShopifyStoreRequest, res: Response) => {
+router.post('/sync-products', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { shopName } = req.body;
     const userId = req.user?.id;
@@ -194,7 +187,7 @@ router.post('/sync-products', authMiddleware, async (req: ShopifyStoreRequest, r
         // Check if product already exists
         const existingResult = await query(
           'SELECT id FROM products WHERE external_id = $1 AND external_source = $2',
-          [shopifyProduct.id, 'shopify']
+          [(shopifyProduct as any).id, 'shopify']
         );
 
         if (existingResult.rows.length === 0) {
@@ -202,7 +195,7 @@ router.post('/sync-products', authMiddleware, async (req: ShopifyStoreRequest, r
           await query(
             `INSERT INTO products (user_id, name, description, brand, image_url, external_id, external_source, created_at)
              VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-            [userId, transformed.name, transformed.description, transformed.brand, transformed.imageUrl, shopifyProduct.id, 'shopify']
+            [userId, transformed.name, transformed.description, transformed.brand, transformed.imageUrl, (shopifyProduct as any).id, 'shopify']
           );
 
           synced++;
@@ -210,7 +203,7 @@ router.post('/sync-products', authMiddleware, async (req: ShopifyStoreRequest, r
           skipped++;
         }
       } catch (error) {
-        logger.error(`Error syncing product ${shopifyProduct.id}`, error);
+        logger.error(`Error syncing product ${(shopifyProduct as any).id}`, error);
         skipped++;
       }
     }
@@ -237,7 +230,7 @@ router.post('/sync-products', authMiddleware, async (req: ShopifyStoreRequest, r
  * GET /api/shopify/stores
  * List all connected Shopify stores for user
  */
-router.get('/stores', authMiddleware, async (req: ShopifyStoreRequest, res: Response) => {
+router.get('/stores', authMiddleware, async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
 
@@ -275,7 +268,7 @@ router.get('/stores', authMiddleware, async (req: ShopifyStoreRequest, res: Resp
  * DELETE /api/shopify/disconnect
  * Disconnect a Shopify store
  */
-router.delete('/disconnect', authMiddleware, async (req: ShopifyStoreRequest, res: Response) => {
+router.delete('/disconnect', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { shopName } = req.body;
     const userId = req.user?.id;

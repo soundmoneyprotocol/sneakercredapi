@@ -128,7 +128,7 @@ router.get('/prices', async (req: Request, res: Response) => {
 
     // Group prices by marketplace
     const pricesByMarketplace: Record<string, any[]> = {};
-    priceHistory.forEach((row) => {
+    priceHistory.forEach((row: any) => {
       if (!pricesByMarketplace[row.marketplace]) {
         pricesByMarketplace[row.marketplace] = [];
       }
