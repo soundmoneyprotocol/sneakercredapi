@@ -2,7 +2,7 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies (using npm install instead of npm ci for flexibility)
 COPY package.json ./
 RUN npm install
 
